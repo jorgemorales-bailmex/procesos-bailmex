@@ -471,6 +471,10 @@ flowchart TD
 </main>
 
 <script>
+  // Inicializar Mermaid de inmediato con startOnLoad:false para evitar
+  // que intente renderizar antes de que se desbloquee el gate.
+  mermaid.initialize({ startOnLoad:false, theme:'base', securityLevel:'loose', flowchart:{ curve:'basis', padding:24, nodeSpacing:70, rankSpacing:90, useMaxWidth:false, htmlLabels:true }, themeVariables:{ fontFamily:'-apple-system, Segoe UI, Roboto, sans-serif', fontSize:'14px' } });
+
   // ============ CONFIG ============
   // 1) Cambia esta contraseña antes de publicar. Se verifica en el navegador (solo disuasoria).
   const ACCESS_PASSWORD = 'bailmex2026';
@@ -502,8 +506,6 @@ flowchart TD
   function initApp(){
     if (window.__appInit) return;
     window.__appInit = true;
-
-  mermaid.initialize({ startOnLoad:false, theme:'base', securityLevel:'loose', flowchart:{ curve:'basis', padding:24, nodeSpacing:70, rankSpacing:90, useMaxWidth:false, htmlLabels:true }, themeVariables:{ fontFamily:'-apple-system, Segoe UI, Roboto, sans-serif', fontSize:'14px' } });
 
   // Guardar el código fuente de cada diagrama antes de renderizar
   // IMPORTANTE: usar innerHTML (no textContent) para preservar los <br/> que el browser
