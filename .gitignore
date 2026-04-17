@@ -1,0 +1,7 @@
+service-account-key.json
+*.key.json
+*-key.json
+.env
+.env.*
+.DS_Store
+Thumbs.db

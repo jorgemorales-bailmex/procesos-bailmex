@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Procesos Operativos · Bailmex</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  :root{
+    /* Paleta Bailmex */
+    --brand:#EF4E23;        --brand-dark:#C2410C;      --brand-soft:#FED7AA;
+    --navy:#1A2332;         --navy-soft:#D6DEE8;
+    --ink:#1F2937;          --muted:#6B7280;           --bg:#F9FAFB;
+    --ok:#16A34A;           --ok-soft:#BBF7D0;
+    --ko:#DC2626;           --ko-soft:#FECACA;
+    /* Roles — paleta viva */
+    --asesor:#FFB74D;       --asesor-b:#E65100;      /* naranja vibrante */
+    --mesa:#42A5F5;         --mesa-b:#0D47A1;        /* azul eléctrico */
+    --syscap:#9E9E9E;       --syscap-b:#37474F;      /* grafito */
+    --ops:#AB47BC;          --ops-b:#4A148C;         /* violeta */
+    --recep:#FF7043;        --recep-b:#BF360C;       /* coral-terracota */
+    --cliente:#EF5350;      --cliente-b:#B71C1C;     /* rojo vivo */
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;color:var(--ink);background:var(--bg);display:flex;min-height:100vh;background-image:radial-gradient(circle at 20% 0%, rgba(239,78,35,.04) 0%, transparent 50%), radial-gradient(circle at 80% 100%, rgba(13,71,161,.04) 0%, transparent 50%)}
+  aside{width:280px;background:#fff;border-right:1px solid #E5E7EB;padding:0 0 24px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+  .brand{background:linear-gradient(135deg,#0D47A1 0%,#1A2332 100%);padding:22px 20px 20px;color:#fff;margin-bottom:18px;position:relative;overflow:hidden}
+  .brand::after{content:'';position:absolute;right:-30px;top:-30px;width:100px;height:100px;background:var(--brand);border-radius:50%;opacity:.15}
+  .brand img{display:block;height:60px;width:auto;margin-bottom:12px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3))}
+  .brand h1{font-size:13px;margin:0;color:#fff;font-weight:600;letter-spacing:.02em;line-height:1.3}
+  .brand .sub{font-size:10px;color:rgba(255,255,255,.6);margin-top:3px;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+  aside nav,aside .legend{padding:0 18px}
+  aside nav a{display:block;padding:10px 12px;margin-bottom:4px;border-radius:6px;text-decoration:none;color:var(--ink);font-size:13.5px;border-left:3px solid transparent;transition:all .15s}
+  aside nav a:hover{background:#FFF4EE}
+  aside nav a.active{background:#FFF4EE;border-left-color:var(--brand);font-weight:600;color:var(--brand-dark)}
+  .legend{margin-top:24px;padding-top:16px;border-top:1px solid #E5E7EB}
+  .legend h3{font-size:10px;text-transform:uppercase;color:var(--muted);margin:0 0 8px;letter-spacing:.08em;font-weight:700}
+  .legend-item{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px}
+  .swatch{width:14px;height:14px;border-radius:3px;border:1.5px solid rgba(0,0,0,.15)}
+  main{flex:1;padding:32px 48px;max-width:1400px}
+  .proc{display:none}
+  .proc.active{display:block}
+  .proc header{padding-bottom:20px;margin-bottom:24px;border-bottom:2px solid #E5E7EB;position:relative}
+  .proc header::after{content:'';position:absolute;bottom:-2px;left:0;width:80px;height:2px;background:var(--brand)}
+  .proc header h2{margin:0 0 6px;font-size:26px;color:var(--navy);font-weight:700;letter-spacing:-.01em}
+  .proc header h2 .num{display:inline-block;background:var(--brand);color:#fff;padding:3px 10px;border-radius:6px;font-size:14px;font-weight:700;margin-right:12px;vertical-align:middle;letter-spacing:.05em}
+  .proc header p{color:var(--muted);margin:0;font-size:14px;max-width:820px;line-height:1.5}
+  .mermaid{background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:28px;overflow:auto;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .meta{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .meta .pill{background:#fff;border:1px solid #E5E7EB;border-radius:6px;padding:8px 14px;font-size:12px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .meta .pill b{color:var(--navy);font-weight:700;margin-right:8px;font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+  footer.notes{margin-top:20px;padding:16px 20px;background:#FFF4EE;border-left:3px solid var(--brand);border-radius:6px;font-size:13px;color:#4B2E1E}
+  footer.notes b{color:var(--brand-dark)}
+  /* Password gate */
+  .pwgate{position:fixed;inset:0;background:linear-gradient(135deg,#0D47A1 0%,#1A2332 100%);display:flex;align-items:center;justify-content:center;z-index:9999}
+  .pwbox{background:#fff;padding:36px 40px;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:360px;max-width:90vw;text-align:center}
+  .pwbox h2{margin:0 0 6px;color:var(--navy);font-size:20px}
+  .pwbox p.hint{margin:0 0 22px;color:var(--muted);font-size:13px}
+  .pwbox input{width:100%;padding:12px 14px;border:1.5px solid #E5E7EB;border-radius:6px;font-size:15px;margin-bottom:12px;outline:none;transition:border-color .15s}
+  .pwbox input:focus{border-color:var(--brand)}
+  .pwbox button{width:100%;padding:12px;background:var(--brand);color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;letter-spacing:.02em}
+  .pwbox button:hover{background:var(--brand-dark)}
+  .pwbox .err{color:var(--ko);font-size:12px;margin-top:10px;min-height:16px}
+  body.locked{overflow:hidden}
+  body.locked main,body.locked aside{filter:blur(8px);pointer-events:none;user-select:none}
+  /* Comments */
+  .comments{margin-top:22px;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:22px 24px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .comments h3{margin:0 0 14px;font-size:14px;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;font-weight:700;display:flex;align-items:center;gap:8px}
+  .comments h3::before{content:'';width:4px;height:14px;background:var(--brand);border-radius:2px}
+  .comments-list{margin-bottom:18px;max-height:320px;overflow-y:auto}
+  .comments-list .empty{color:var(--muted);font-size:13px;font-style:italic;padding:8px 0}
+  .comment{padding:12px 14px;background:#F9FAFB;border-left:3px solid var(--mesa);border-radius:4px;margin-bottom:8px}
+  .comment .meta-c{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+  .comment .meta-c b{color:var(--navy);font-weight:700}
+  .comment .text{font-size:13.5px;color:var(--ink);line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+  .comment-form{display:grid;grid-template-columns:200px 1fr auto;gap:10px;align-items:start;padding-top:14px;border-top:1px solid #E5E7EB}
+  .comment-form input,.comment-form textarea{padding:10px 12px;border:1px solid #E5E7EB;border-radius:6px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+  .comment-form input:focus,.comment-form textarea:focus{border-color:var(--brand)}
+  .comment-form textarea{resize:vertical;min-height:44px}
+  .comment-form button{padding:10px 18px;background:var(--navy);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+  .comment-form button:hover{background:#0D47A1}
+  .comment-form button:disabled{opacity:.5;cursor:wait}
+  .comment-form .status{grid-column:1/-1;font-size:12px;color:var(--muted);min-height:16px}
+  .comment-form .status.ok{color:var(--ok)}
+  .comment-form .status.err{color:var(--ko)}
+  @media (max-width:720px){.comment-form{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="locked">
+
+<!-- Password gate -->
+<div id="pwgate" class="pwgate">
+  <div class="pwbox">
+    <h2>Procesos Operativos</h2>
+    <p class="hint">Acceso restringido · Ingresa la contraseña</p>
+    <input type="password" id="pwinput" autocomplete="current-password" autofocus>
+    <button id="pwsubmit" type="button">Entrar</button>
+    <div class="err" id="pwerror"></div>
+  </div>
+</div>
+
+<aside>
+  <div class="brand">
+    <img src="https://www.bailmex.com.mx/wp-content/uploads/2025/10/bailmex-logo.png" alt="Bailmex">
+    <h1>Procesos Operativos</h1>
+    <div class="sub">Dirección General · v1 · 2026</div>
+  </div>
+  <nav>
+    <a href="#p1" class="nav-link active" data-target="p1">1a · Aperturas</a>
+    <a href="#p1b" class="nav-link" data-target="p1b">1b · Aperturas sin depósito</a>
+    <a href="#p1c" class="nav-link" data-target="p1c">1c · Contratos de migración</a>
+    <a href="#p2" class="nav-link" data-target="p2">2 · Retiros</a>
+    <a href="#p3" class="nav-link" data-target="p3">3 · Incrementos</a>
+    <a href="#p4" class="nav-link" data-target="p4">4 · Modificación de contrato</a>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #E5E7EB;font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.08em;font-weight:700;padding-left:12px;margin-bottom:6px">Anexos</div>
+    <a href="#pf" class="nav-link" data-target="pf">A · Proceso de firma</a>
+  </nav>
+  <div class="legend">
+    <h3>Roles</h3>
+    <div class="legend-item"><span class="swatch" style="background:var(--asesor);border-color:var(--asesor-b)"></span>Asesor</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--mesa);border-color:var(--mesa-b)"></span>Mesa de Control</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--syscap);border-color:var(--syscap-b)"></span>SYSCAP (sistema)</div>
+    <div class="legend-item"><span class="swatch" style="background:#26C6DA;border-color:#006064"></span>Zazu (sistema interno)</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--ops);border-color:var(--ops-b)"></span>Operaciones</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--recep);border-color:var(--recep-b)"></span>Recepción</div>
+    <div class="legend-item"><span class="swatch" style="background:var(--cliente);border-color:var(--cliente-b)"></span>Cliente</div>
+    <div class="legend-item"><span class="swatch" style="background:#9CCC65;border-color:#33691E"></span>Contabilidad</div>
+    <div class="legend-item"><span class="swatch" style="background:#EC407A;border-color:#880E4F"></span>Tesorería</div>
+    <h3 style="margin-top:18px">Formas</h3>
+    <div class="legend-item">▭ &nbsp;Acción</div>
+    <div class="legend-item">◇ &nbsp;Decisión</div>
+    <div class="legend-item">◯ &nbsp;Inicio / Fin</div>
+    <div class="legend-item">▭ (cilindro) &nbsp;Sistema</div>
+  </div>
+</aside>
+
+<main>
+
+<!-- ============ PROCESO 1 · CONTRATACIÓN ============ -->
+<section id="p1" class="proc active">
+  <header>
+    <h2><span class="num">1a</span>Aperturas</h2>
+    <p>Desde la carga de documentación y registro de nueva inversión, hasta el contrato activo.</p>
+  </header>
+  <div class="meta">
+    <span class="pill"><b>Dueño</b>Mesa de Control</span>
+    <span class="pill"><b>Entrada</b>Documentación del prospecto</span>
+    <span class="pill"><b>Salida</b>Contrato ACTIVO</span>
+    <span class="pill"><b>Siguiente</b>Proceso 5 · Post-venta</span>
+  </div>
+
+  <footer class="notes" style="margin-top:0;margin-bottom:20px">
+    <b>Notas de diseño:</b> el contrato queda ACTIVO con la autorización de Mesa de Control, no con la firma. El proceso de firma (físico/digital) se maneja en un diagrama aparte y corre en paralelo a la apertura.
+  </footer>
+
+  <div class="mermaid">
+flowchart TD
+    START((Inicio)):::start --> A1[Asesor registra Nueva<br/>Inversión en SYSCAP con<br/>condiciones monto · plazo ·<br/>tasa · producto]:::asesor
+    A1 --> A2[Asesor carga documentación<br/>del cliente]:::asesor
+    A2 --> M1{Mesa de Control valida<br/>expediente y movimiento}:::mesa
+    CONT[Contabilidad proporciona<br/>información de ingresos<br/>bancarios]:::conta --> M1
+    M1 -->|Rechazado| EDIT[Asesor edita información del<br/>cliente e inversión]:::asesor
+    EDIT --> M1
+    M1 -->|Aprobado| S2[(SYSCAP genera contrato<br/>automáticamente)]:::syscap
+    S2 --> ACT((Contrato ACTIVO)):::ok
+    S2 -.->|en paralelo| FIRMA["Proceso de firma (Ver Anexo)"]:::link
+
+    ACT --> PV[SYSCAP genera y Mesa de Control<br/>envía estados de cuenta y facturas<br/>mensualmente al correo del cliente<br/>con copia al asesor]:::mesa
+
+    classDef asesor  fill:#FFB74D,stroke:#E65100,stroke-width:1.5px,color:#1F2937
+    classDef mesa    fill:#64B5F6,stroke:#0D47A1,stroke-width:1.5px,color:#1F2937
+    classDef syscap  fill:#B0BEC5,stroke:#37474F,stroke-width:1.5px,color:#1F2937
+    classDef zazu    fill:#26C6DA,stroke:#006064,stroke-width:1.5px,color:#ffffff
+    classDef conta   fill:#9CCC65,stroke:#33691E,stroke-width:1.5px,color:#1F2937
+    classDef ops     fill:#BA68C8,stroke:#4A148C,stroke-width:1.5px,color:#1F2937
+    classDef recep   fill:#FF8A65,stroke:#BF360C,stroke-width:1.5px,color:#1F2937
+    classDef cliente fill:#EF5350,stroke:#B71C1C,stroke-width:1.5px,color:#1F2937
+    classDef start   fill:#FFF9C4,stroke:#F57F17,stroke-width:2px,color:#1A2332
+    classDef ok      fill:#66BB6A,stroke:#1B5E20,stroke-width:2px,color:#ffffff
+    classDef ko      fill:#E53935,stroke:#B71C1C,color:#ffffff,stroke-width:1.5px
+    classDef link    fill:#FFE082,stroke:#FF6F00,stroke-dasharray:5 3,color:#BF360C
+  </div>
+</section>
+
+<!-- ============ PROCESO 1B · APERTURAS CON CONTRATO MAESTRO ============ -->
+<section id="p1b" class="proc">
+  <header>
+    <h2><span class="num">1b</span>Aperturas sin depósito</h2>
+    <p>Variante de Aperturas cuando el asesor necesita algo firmable con el cliente antes de que se valide el movimiento. Incluye la generación y firma de un Contrato Maestro adicional.</p>
+  </header>
+  <div class="meta">
+    <span class="pill"><b>Dueño</b>Mesa de Control</span>
+    <span class="pill"><b>Entrada</b>Documentación del prospecto</span>
+    <span class="pill"><b>Salida</b>Contrato ACTIVO</span>
+    <span class="pill"><b>Diferencia vs. 1</b>Contrato Maestro previo a validación de movimiento</span>
+  </div>
+
+  <footer class="notes" style="margin-top:0;margin-bottom:20px">
+    <b>Cuándo aplica:</b> cuando <b>aún no hay comprobante de depósito</b> y Mesa de Control no puede validar expediente y movimiento al mismo tiempo. En ese caso, Mesa de Control envía únicamente el <b>Contrato Maestro</b> para que el asesor tenga algo firmable con el cliente. La validación del movimiento corre en <b>paralelo</b> e independiente: no está condicionada a la firma del Contrato Maestro. Ambas firmas (Contrato Maestro y Contrato de préstamo) se manejan en el <b>Anexo · Proceso de firma</b>.
+  </footer>
+
+  <div class="mermaid">
+flowchart TD
+    START((Inicio)):::start --> A1[Asesor registra Nueva<br/>Inversión en SYSCAP con<br/>condiciones monto · plazo ·<br/>tasa · producto]:::asesor
+    A1 --> A2[Asesor carga documentación<br/>del cliente]:::asesor
+    A2 --> M1{Mesa de Control valida<br/>expediente}:::mesa
+    M1 -->|Rechazado| EDIT1[Asesor edita información<br/>del cliente]:::asesor
+    EDIT1 --> M1
+
+    M1 -->|Aprobado<br/>sin comprobante| MC1[(SYSCAP genera<br/>Contrato Maestro)]:::syscap
+    MC1 --> FIRMA1["Proceso de firma (Ver Anexo)"]:::link
+
+    M1 -->|Aprobado| M2{Mesa de Control valida<br/>movimiento}:::mesa
+    CONT[Contabilidad proporciona<br/>información de ingresos<br/>bancarios]:::conta --> M2
+    M2 -->|Rechazado| EDIT2[Asesor edita información<br/>de la inversión]:::asesor
+    EDIT2 --> M2
+    M2 -->|Aprobado| S2[(SYSCAP genera contrato<br/>automáticamente)]:::syscap
+    S2 --> ACT((Contrato ACTIVO)):::ok
+    S2 -.->|en paralelo| FIRMA2["Proceso de firma (Ver Anexo)"]:::link
+    ACT --> PV[SYSCAP genera y Mesa de Control<br/>envía estados de cuenta y facturas<br/>mensualmente al correo del cliente<br/>con copia al asesor]:::mesa
+
+    classDef asesor  fill:#FFB74D,stroke:#E65100,stroke-width:1.5px,color:#1F2937
+    classDef mesa    fill:#64B5F6,stroke:#0D47A1,stroke-width:1.5px,color:#1F2937
+    classDef syscap  fill:#B0BEC5,stroke:#37474F,stroke-width:1.5px,color:#1F2937
+    classDef conta   fill:#9CCC65,stroke:#33691E,stroke-width:1.5px,color:#1F2937
+    classDef start   fill:#FFF9C4,stroke:#F57F17,stroke-width:2px,color:#1A2332
+    classDef ok      fill:#66BB6A,stroke:#1B5E20,stroke-width:2px,color:#ffffff
+    classDef link    fill:#FFE082,stroke:#FF6F00,stroke-dasharray:5 3,color:#BF360C
+  </div>
+</section>
+
+<!-- ============ PROCESO 1C · CONTRATOS DE MIGRACIÓN ============ -->
+<section id="p1c" class="proc">
+  <header>
+    <h2><span class="num">1c</span>Contratos de migración</h2>
+    <p>Alta en Bailmex de clientes y contratos provenientes de un sistema anterior. Variante de Aperturas sin validación contable: Operaciones se encarga de que los montos y fechas sean congruentes con el sistema origen.</p>
+  </header>
+  <div class="meta">
+    <span class="pill"><b>Dueño</b>Operaciones · Mesa de Control</span>
+    <span class="pill"><b>Entrada</b>Base de datos de clientes y contratos a migrar</span>
+    <span class="pill"><b>Salida</b>Contrato ACTIVO en SYSCAP</span>
+    <span class="pill"><b>Diferencia vs. 1a</b>Sin validación contable · con renovación configurable</span>
+    <span class="pill"><b>SLA Entorno de Operaciones</b>Hasta 2 días antes del inicio de la renovación</span>
+  </div>
+
+  <footer class="notes" style="margin-top:0;margin-bottom:20px">
+    <b>Cuándo aplica:</b> al migrar clientes y contratos desde <b>Zazu</b> (sistema anterior) hacia Bailmex. <b>Operaciones</b> provee la base de datos y valida que los <b>montos, fechas y tasas</b> sean congruentes con el sistema origen — esta validación <b>es continua durante todo el proceso y se intensifica a fin de mes</b>. No hay intervención de Contabilidad. <b>Mesa de Control</b> carga los inversionistas en SYSCAP y el <b>asesor</b> complementa la información del cliente.<br><br>
+    <b>Casos en que no migra:</b> (1) si el asesor no carga la información del cliente, el contrato regresa al sistema anterior; (2) si el cliente no desea migrar, se reporta en <b>Entorno de Operaciones</b>. En ambos casos el contrato queda fuera del proceso de migración.<br><br>
+    <b>Renovación:</b> el asesor puede configurar tres cambios puntuales desde <b>Entorno de Operaciones</b>: forma de pago, forma de envío o sucursal, y unificación de contratos.<br><br>
+    <b>SLA:</b> todo lo que se reporte en Entorno de Operaciones debe hacerse <b>hasta 2 días antes de la fecha de inicio de la renovación</b>. Si los cambios se piden fuera de ese plazo, la solicitud se escala <b>vía ticket</b> y Operaciones evalúa su <b>viabilidad</b>; si no es viable, el cambio no aplica.
+  </footer>
+
+  <div class="mermaid">
+flowchart TD
+    START((Inicio)):::start --> OP1[Operaciones comparte base de<br/>datos de clientes y contratos<br/>a migrar desde Zazu<br/>con SYSCAP y Mesa de Control]:::ops
+    OP1 --> MC1[Mesa de Control carga<br/>inversionistas en SYSCAP]:::mesa
+    MC1 --> D_CLI{¿Cliente desea migrar?}:::asesor
+    D_CLI -->|No| ENT_NO[Asesor reporta en<br/>Entorno de Operaciones<br/>hasta 2 días antes del inicio<br/>de la renovación]:::ops
+    ENT_NO --> NOMIG2((No migra<br/>Regresa a Zazu)):::ko
+    D_CLI -->|Sí| D0{¿Asesor carga información<br/>del cliente?}:::asesor
+    D0 -->|No| NOMIG1((No migra<br/>Regresa a Zazu)):::ko
+    D0 -->|Sí| A1[Asesor carga información<br/>del cliente]:::asesor
+    A1 --> D1{¿Requiere especificaciones<br/>de renovación?}:::asesor
+    D1 -->|Sí| D_PLAZO{¿Antes de 2 días del<br/>inicio de la renovación?}:::asesor
+    D_PLAZO -->|Sí| ENT[Asesor configura en<br/>Entorno de Operaciones]:::ops
+    D_PLAZO -->|No| TICKET[Asesor solicita vía ticket]:::asesor
+    TICKET --> VIAB{Operaciones evalúa<br/>viabilidad}:::ops
+    VIAB -->|No viable| NOCAMB((Cambio no aplica)):::ko
+    VIAB -->|Viable| ENT
+    ENT --> OPT1[Forma de pago]:::ops
+    ENT --> OPT2[Forma de envío o sucursal]:::ops
+    ENT --> OPT3[Unificación de contratos]:::ops
+    OPT1 --> S2
+    OPT2 --> S2
+    OPT3 --> S2
+    D1 -->|No| S2[(SYSCAP genera contrato<br/>de migración)]:::syscap
+    S2 --> ACT((Contrato ACTIVO)):::ok
+    S2 -.->|en paralelo| FIRMA["Proceso de firma (Ver Anexo)"]:::link
+    OP2[Operaciones valida montos<br/>fechas y tasas contra Zazu<br/>de forma continua<br/>especialmente a fin de mes]:::ops -.-|supervisión continua| ACT
+    ACT --> PV[SYSCAP genera y Mesa de Control<br/>envía estados de cuenta y facturas<br/>mensualmente al correo del cliente<br/>con copia al asesor]:::mesa
+
+    classDef asesor  fill:#FFB74D,stroke:#E65100,stroke-width:1.5px,color:#1F2937
+    classDef mesa    fill:#64B5F6,stroke:#0D47A1,stroke-width:1.5px,color:#1F2937
+    classDef syscap  fill:#B0BEC5,stroke:#37474F,stroke-width:1.5px,color:#1F2937
+    classDef ops     fill:#BA68C8,stroke:#4A148C,stroke-width:1.5px,color:#ffffff
+    classDef start   fill:#FFF9C4,stroke:#F57F17,stroke-width:2px,color:#1A2332
+    classDef ok      fill:#66BB6A,stroke:#1B5E20,stroke-width:2px,color:#ffffff
+    classDef link    fill:#FFE082,stroke:#FF6F00,stroke-dasharray:5 3,color:#BF360C
+    classDef ko      fill:#E53935,stroke:#B71C1C,stroke-width:2px,color:#ffffff
+  </div>
+</section>
+
+<!-- ============ PROCESO DE FIRMA ============ -->
+<section id="pf" class="proc">
+  <header>
+    <h2><span class="num">A</span>Proceso de firma (anexo)</h2>
+    <p>Subproceso común reutilizado por Aperturas, Retiros, Incrementos y Modificación de contrato. Recolecta la firma del cliente sobre un documento ya generado, ya sea digital (MIFIEL vía Zazu) o física (impresión y recolección en sucursal).</p>
+  </header>
+  <div class="meta">
+    <span class="pill"><b>Dueño</b>Mesa de Control</span>
+    <span class="pill"><b>Entrada</b>Documento generado (contrato · constancia)</span>
+    <span class="pill"><b>Salida</b>Firma registrada · o · Documento cancelado</span>
+    <span class="pill"><b>Reutilizado por</b>Aperturas · Retiros · Incrementos · Modificación</span>
+  </div>
+
+  <footer class="notes" style="margin-top:0;margin-bottom:20px">
+    <b>Notas de diseño:</b> dos salidas posibles (firma registrada o contrato cancelado). En la rama física, si Mesa de Control no autoriza la firma escaneada, el asesor vuelve a recabarla. La rama digital no tiene ruta de cancelación porque la validación de Zazu es automática — si fallara, el caso se reiniciaría por separado.
+  </footer>
+
+  <div class="mermaid">
+flowchart TD
+    START((Documento generado)):::start --> D1{Tipo de firma}:::asesor
+
+    %% Rama Digital
+    D1 -->|Digital| M1[Mesa de Control envía por<br/>MIFIEL con la herramienta de<br/>envío de contratos de Zazu]:::mesa
+    M1 --> C1[Cliente firma<br/>electrónicamente]:::cliente
+    C1 --> Z1[(Zazu valida firma<br/>automáticamente)]:::zazu
+    Z1 --> OK((Firma registrada)):::ok
+
+    %% Rama Física
+    D1 -->|Físico| O1[Operaciones imprime y envía<br/>a sucursal]:::ops
+    O1 --> R1[Recepción canaliza al asesor]:::recep
+    R1 --> A1[Asesor recaba firma del<br/>cliente]:::asesor
+    A1 --> D2{¿Firma exitosa?}:::asesor
+
+    D2 -->|No| CAN[Asesor notifica cancelación<br/>y regresa contrato a<br/>Operaciones]:::asesor
+    CAN --> O2[Operaciones cancela contrato<br/>en el sistema]:::ops
+    O2 --> CANEND((Contrato cancelado)):::ko
+
+    D2 -->|Sí| R2[Recepción escanea y carga en<br/>SYSCAP]:::recep
+    R2 --> M2{Mesa de Control autoriza<br/>firma}:::mesa
+    M2 -->|No| A1
+    M2 -->|Sí| OK
+
+    classDef asesor  fill:#FFB74D,stroke:#E65100,stroke-width:1.5px,color:#1F2937
+    classDef mesa    fill:#64B5F6,stroke:#0D47A1,stroke-width:1.5px,color:#1F2937
+    classDef syscap  fill:#B0BEC5,stroke:#37474F,stroke-width:1.5px,color:#1F2937
+    classDef zazu    fill:#26C6DA,stroke:#006064,stroke-width:1.5px,color:#ffffff
+    classDef ops     fill:#BA68C8,stroke:#4A148C,stroke-width:1.5px,color:#ffffff
+    classDef recep   fill:#FF8A65,stroke:#BF360C,stroke-width:1.5px,color:#1F2937
+    classDef cliente fill:#EF5350,stroke:#B71C1C,stroke-width:1.5px,color:#ffffff
+    classDef start   fill:#FFF9C4,stroke:#F57F17,stroke-width:2px,color:#1A2332
+    classDef ok      fill:#66BB6A,stroke:#1B5E20,stroke-width:2px,color:#ffffff
+    classDef ko      fill:#E53935,stroke:#B71C1C,stroke-width:1.5px,color:#ffffff
+  </div>
+</section>
+
+<!-- ============ PROCESO 2 · RETIROS ============ -->
+<section id="p2" class="proc">
+  <header>
+    <h2><span class="num">02</span>Retiros</h2>
+    <p>Solicitud de retiro parcial o total; se procesa la firma y ejecuta el movimiento.</p>
+  </header>
+  <div class="meta">
+    <span class="pill"><b>Dueño</b>Operaciones · Mesa de Control</span>
+    <span class="pill"><b>Entrada</b>Solicitud del cliente</span>
+    <span class="pill"><b>Salida</b>Retiro pagado</span>
+    <span class="pill"><b>SLA pago</b>30 días naturales desde firma recuperada</span>
+  </div>
+
+  <footer class="notes" style="margin-top:0;margin-bottom:20px">
+    <b>Notas de diseño:</b> las dos ramas (físico · digital) convergen en la misma validación de Mesa de Control, que es el punto único de autorización. Después del visto bueno, Operaciones comunica en paralelo a Contabilidad (registro) y Tesorería (pago con SLA de 30 días naturales desde que los documentos firmados son recuperados). La caja amarilla punteada en Operaciones marca la actividad que migrará totalmente a Operaciones.
+  </footer>
+
+  <div class="mermaid">
+flowchart TD
+    START((Inicio)):::start --> A1[Asesor solicita retiro en<br/>SYSCAP]:::asesor
+    A1 --> OP1[Operaciones y Dirección<br/>Comercial generan formato de<br/>retiro con información de<br/>SYSCAP y lo envían al asesor]:::ops
+    OP1 -.- NOTA[Nota: a futuro esta<br/>actividad pasa totalmente a<br/>Operaciones]:::link
+
+    OP1 --> D1{Tipo de firma}:::asesor
+
+    D1 -->|Físico| A2[Asesor recaba firma del<br/>cliente]:::asesor
+    A2 --> A3[Asesor carga formato firmado<br/>en SYSCAP]:::asesor
+
+    D1 -->|Digital| A4[Asesor da seguimiento a<br/>firma por MIFIEL]:::asesor
+    A4 --> A5[Asesor carga evidencia de<br/>firma en SYSCAP]:::asesor
+
+    A3 --> M1{Mesa de Control valida<br/>retiro}:::mesa
+    A5 --> M1
+    M1 -->|No procede| A1
+    M1 -->|Procede| MC1[Mesa de Control genera<br/>constancia de préstamo]:::mesa
+    MC1 --> FIRMA2["Proceso de firma (Ver Anexo)"]:::link
+    FIRMA2 --> OP2[Operaciones da visibilidad<br/>en tiempo real a<br/>Contabilidad y Tesorería de<br/>los retiros autorizados]:::ops
+    OP2 --> CB[Contabilidad registra el<br/>retiro]:::conta
+    OP2 --> TS[Tesorería paga el retiro en<br/>30 días naturales desde que<br/>se recuperan los documentos<br/>firmados]:::tes
+    CB --> END((Retiro pagado)):::ok
+    TS --> END
+
+    classDef asesor fill:#FFB74D,stroke:#E65100,stroke-width:1.5px,color:#1F2937
+    classDef mesa   fill:#64B5F6,stroke:#0D47A1,stroke-width:1.5px,color:#1F2937
+    classDef syscap fill:#B0BEC5,stroke:#37474F,stroke-width:1.5px,color:#1F2937
+    classDef ops    fill:#BA68C8,stroke:#4A148C,stroke-width:1.5px,color:#ffffff
+    classDef conta  fill:#9CCC65,stroke:#33691E,stroke-width:1.5px,color:#1F2937
+    classDef tes    fill:#EC407A,stroke:#880E4F,stroke-width:1.5px,color:#ffffff
+    classDef start  fill:#FFF9C4,stroke:#F57F17,stroke-width:2px,color:#1A2332
+    classDef ok     fill:#66BB6A,stroke:#1B5E20,stroke-width:2px,color:#ffffff
+    classDef link   fill:#FFE082,stroke:#FF6F00,stroke-dasharray:5 3,color:#BF360C
+  </div>
+</section>
+
+<!-- ============ PROCESO 3 · PRÉSTAMOS ============ -->
+<section id="p3" class="proc">
+  <header>
+    <h2><span class="num">03</span>Incrementos</h2>
+    <p>Aumento de aportación sobre un contrato vigente. El cliente paga, Mesa de Control valida el pago con información de Contabilidad y genera la constancia para firma.</p>
+  </header>
+  <div class="meta">
+    <span class="pill"><b>Dueño</b>Mesa de Control</span>
+    <span class="pill"><b>Entrada</b>Solicitud de incremento del cliente</span>
+    <span class="pill"><b>Salida</b>Incremento aplicado</span>
+  </div>
+
+  <footer class="notes" style="margin-top:0;margin-bottom:20px">
+    <b>Cambios vs. versión anterior:</b> se eliminaron la validación de monto máximo y el VoBo de Dirección Comercial. La constancia ahora es generada por Mesa de Control (no por SYSCAP). La firma se maneja en el diagrama aparte (Proceso de Firma) para no duplicar lógica.
+  </footer>
+
+  <div class="mermaid">
+flowchart TD
+    START((Inicio)):::start --> A1[Asesor recibe solicitud del<br/>cliente]:::asesor
+    A1 --> A2[Asesor registra movimiento<br/>en SYSCAP]:::asesor
+    A2 --> A3[Asesor carga comprobante de<br/>pago en SYSCAP]:::asesor
+    A3 --> M1{Mesa de Control valida pago<br/>en bancos con información de<br/>Contabilidad}:::mesa
+    CONT[Contabilidad proporciona<br/>información de ingresos<br/>bancarios]:::conta --> M1
+    M1 -->|No procede| A3
+    M1 -->|Procede| MC1[Mesa de Control genera<br/>constancia de préstamo]:::mesa
+    MC1 --> FIRMA["Proceso de firma (Ver Anexo)"]:::link
+    FIRMA --> APP((Incremento aplicado)):::ok
+
+    classDef asesor fill:#FFB74D,stroke:#E65100,stroke-width:1.5px,color:#1F2937
+    classDef mesa   fill:#64B5F6,stroke:#0D47A1,stroke-width:1.5px,color:#1F2937
+    classDef conta  fill:#9CCC65,stroke:#33691E,stroke-width:1.5px,color:#1F2937
+    classDef start  fill:#FFF9C4,stroke:#F57F17,stroke-width:2px,color:#1A2332
+    classDef ok     fill:#66BB6A,stroke:#1B5E20,stroke-width:2px,color:#ffffff
+    classDef link   fill:#FFE082,stroke:#FF6F00,stroke-dasharray:5 3,color:#BF360C
+  </div>
+</section>
+
+<!-- ============ PROCESO 4 · MODIFICACIÓN CONTRATO ============ -->
+<section id="p4" class="proc">
+  <header>
+    <h2><span class="num">04</span>Modificación de contrato</h2>
+    <p>Ajustes a un contrato ya vigente (datos, beneficiarios, condiciones).</p>
+  </header>
+  <div class="meta">
+    <span class="pill"><b>Dueño</b>Mesa de Control</span>
+    <span class="pill"><b>Entrada</b>Solicitud de modificación</span>
+    <span class="pill"><b>Salida</b>Cambio aplicado en sistema</span>
+  </div>
+
+  <footer class="notes" style="margin-top:0;margin-bottom:20px">
+    <b>Cuándo aplica este proceso:</b> se dispara por dos causas — (1) el cliente solicita una modificación a su contrato (cambio de datos, beneficiarios, condiciones) o (2) se detecta un error o inconsistencia en el contrato ya emitido. En ambos casos el flujo es el mismo.<br><br>
+    <b>Importante:</b> el cambio <b>entra en vigor desde la primera intervención de Mesa de Control</b> (Mesa de Control modifica en SYSCAP). El resto del proceso — generación del documento modificado y firma — es únicamente para <b>formalizar</b> el cambio. La recolección de firma se maneja en el <b>Anexo · Proceso de firma</b>.
+  </footer>
+
+  <div class="mermaid">
+flowchart TD
+    START((Inicio)):::start --> A1[Asesor solicita modificación<br/>a Mesa de Control vía ticket]:::asesor
+    A1 --> M1[Mesa de Control modifica<br/>en SYSCAP<br/>el cambio entra en vigor aquí]:::mesa
+    M1 --> MC2[Mesa de Control genera<br/>documento modificado]:::mesa
+    MC2 --> FIRMA["Proceso de firma (Ver Anexo)"]:::link
+    FIRMA --> END((Cambio formalizado)):::ok
+
+    classDef asesor fill:#FFB74D,stroke:#E65100,stroke-width:1.5px,color:#1F2937
+    classDef mesa   fill:#64B5F6,stroke:#0D47A1,stroke-width:1.5px,color:#1F2937
+    classDef start  fill:#FFF9C4,stroke:#F57F17,stroke-width:2px,color:#1A2332
+    classDef ok     fill:#66BB6A,stroke:#1B5E20,stroke-width:2px,color:#ffffff
+    classDef link   fill:#FFE082,stroke:#FF6F00,stroke-dasharray:5 3,color:#BF360C
+  </div>
+</section>
+
+</main>
+
+<script>
+  // ============ CONFIG ============
+  // 1) Cambia esta contraseña antes de publicar. Se verifica en el navegador (solo disuasoria).
+  const ACCESS_PASSWORD = 'bailmex2026';
+  // 2) Reemplaza con la URL del Web App de Apps Script tras desplegarlo.
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwTTcTtbeTi3rgQSwidcDoFyX_46a7uwFNdjBygsML_GjuSPMHI6kx49P-HuuH6LGo-/exec';
+
+  // ============ PASSWORD GATE ============
+  const GATE_KEY = 'bailmax_proc_auth';
+  const gate = document.getElementById('pwgate');
+  const pwInput = document.getElementById('pwinput');
+  const pwBtn = document.getElementById('pwsubmit');
+  const pwErr = document.getElementById('pwerror');
+
+  function unlock(){
+    document.body.classList.remove('locked');
+    gate.style.display = 'none';
+    try { sessionStorage.setItem(GATE_KEY, '1'); } catch(_){}
+  }
+  function tryPassword(){
+    if (pwInput.value === ACCESS_PASSWORD) { unlock(); initApp(); }
+    else { pwErr.textContent = 'Contraseña incorrecta'; pwInput.select(); }
+  }
+  pwBtn.addEventListener('click', tryPassword);
+  pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryPassword(); });
+
+  if (sessionStorage.getItem(GATE_KEY) === '1') { unlock(); initApp(); }
+
+  // ============ APP INIT (diagramas + comentarios) ============
+  function initApp(){
+    if (window.__appInit) return;
+    window.__appInit = true;
+
+  mermaid.initialize({ startOnLoad:false, theme:'base', securityLevel:'loose', flowchart:{ curve:'basis', padding:24, nodeSpacing:70, rankSpacing:90, useMaxWidth:false, htmlLabels:true }, themeVariables:{ fontFamily:'-apple-system, Segoe UI, Roboto, sans-serif', fontSize:'14px' } });
+
+  // Guardar el código fuente de cada diagrama antes de renderizar
+  // IMPORTANTE: usar innerHTML (no textContent) para preservar los <br/> que el browser
+  // convirtió en nodos <br>. Luego normalizamos a <br/> y decodificamos entidades HTML.
+  function decodeEntities(str){
+    const t=document.createElement('textarea');
+    t.innerHTML=str;
+    return t.value;
+  }
+  document.querySelectorAll('.mermaid').forEach((el,i)=>{
+    let src = el.innerHTML;
+    src = src.replace(/<br\s*\/?>/gi,'<br/>');
+    src = decodeEntities(src);
+    el.dataset.source = src.trim();
+    el.dataset.rendered = 'false';
+    el.id = el.id || 'mmd-'+i;
+  });
+
+  async function renderActive(){
+    const active = document.querySelector('.proc.active .mermaid');
+    if(!active || active.dataset.rendered==='true') return;
+    const src = active.dataset.source;
+    const {svg} = await mermaid.render('svg-'+active.id, src);
+    active.innerHTML = svg;
+    active.dataset.rendered = 'true';
+  }
+
+  document.querySelectorAll('.nav-link').forEach(link=>{
+    link.addEventListener('click',e=>{
+      e.preventDefault();
+      const id = link.dataset.target;
+      document.querySelectorAll('.proc').forEach(p=>p.classList.remove('active'));
+      document.querySelectorAll('.nav-link').forEach(a=>a.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      link.classList.add('active');
+      window.scrollTo({top:0,behavior:'smooth'});
+      renderActive();
+      loadComments(id);
+    });
+  });
+
+  // ============ COMENTARIOS ============
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function formatDate(iso){
+    try { return new Date(iso).toLocaleString('es-MX',{dateStyle:'medium',timeStyle:'short'}); }
+    catch(_) { return iso; }
+  }
+
+  // Inyectar caja de comentarios en cada sección
+  document.querySelectorAll('.proc').forEach(section => {
+    const id = section.id;
+    const box = document.createElement('div');
+    box.className = 'comments';
+    box.dataset.diagrama = id;
+    box.innerHTML = `
+      <h3>Comentarios</h3>
+      <div class="comments-list" data-for="${id}"><div class="empty">Cargando…</div></div>
+      <form class="comment-form" data-for="${id}">
+        <input type="text" name="nombre" placeholder="Tu nombre" required maxlength="100">
+        <textarea name="comentario" placeholder="Escribe un comentario…" required maxlength="2000"></textarea>
+        <button type="submit">Enviar</button>
+        <div class="status"></div>
+      </form>`;
+    section.appendChild(box);
+  });
+
+  async function loadComments(id){
+    const list = document.querySelector(`.comments-list[data-for="${id}"]`);
+    if (!list) return;
+    if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('PEGA_AQUI')){
+      list.innerHTML = '<div class="empty">Comentarios no configurados todavía.</div>';
+      return;
+    }
+    list.innerHTML = '<div class="empty">Cargando…</div>';
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?diagrama=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Error');
+      if (!data.comments.length){
+        list.innerHTML = '<div class="empty">Todavía no hay comentarios. Sé el primero.</div>';
+        return;
+      }
+      list.innerHTML = data.comments.map(c => `
+        <div class="comment">
+          <div class="meta-c"><b>${escapeHtml(c.nombre)}</b><span>${escapeHtml(formatDate(c.fecha))}</span></div>
+          <div class="text">${escapeHtml(c.comentario)}</div>
+        </div>`).join('');
+    } catch (err) {
+      list.innerHTML = `<div class="empty">No se pudieron cargar los comentarios (${escapeHtml(err.message||err)}).</div>`;
+    }
+  }
+
+  document.querySelectorAll('.comment-form').forEach(form => {
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = form.dataset.for;
+      const nombre = form.nombre.value.trim();
+      const comentario = form.comentario.value.trim();
+      const statusEl = form.querySelector('.status');
+      const btn = form.querySelector('button');
+      if (!nombre || !comentario) return;
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.startsWith('PEGA_AQUI')){
+        statusEl.textContent = 'Falta configurar APPS_SCRIPT_URL en el HTML.';
+        statusEl.className = 'status err';
+        return;
+      }
+      btn.disabled = true;
+      statusEl.textContent = 'Enviando…';
+      statusEl.className = 'status';
+      try {
+        // text/plain evita preflight CORS con Apps Script
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ diagrama: id, nombre, comentario })
+        });
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.error || 'Error');
+        statusEl.textContent = '✓ Comentario enviado';
+        statusEl.className = 'status ok';
+        form.comentario.value = '';
+        loadComments(id);
+      } catch (err) {
+        statusEl.textContent = 'Error: ' + (err.message || err);
+        statusEl.className = 'status err';
+      } finally {
+        btn.disabled = false;
+        setTimeout(() => { if (statusEl.className==='status ok') statusEl.textContent=''; }, 3000);
+      }
+    });
+  });
+
+  // Render inicial + carga inicial de comentarios del proceso activo
+  renderActive();
+  const initActive = document.querySelector('.proc.active');
+  if (initActive) loadComments(initActive.id);
+
+  } // ========== fin initApp ==========
+</script>
+</body>
+</html>
